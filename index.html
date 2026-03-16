@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentence Recorder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar__meta">
+        <div>
+          <p id="appEyebrow" class="eyebrow">Sentence Recording App</p>
+          <h1 id="appTitle" class="title">Nahrávání vět</h1>
+          <p class="title-accent">voice dataset capture</p>
+        </div>
+        <div class="topbar__actions">
+          <div class="topbar__stats">
+            <div class="stat-chip">
+              <span id="totalLabel" class="stat-chip__label">Celkem</span>
+              <strong id="totalDurationLabel">0.0 s</strong>
+            </div>
+          </div>
+          <div class="locale-switch" role="group" aria-label="Language switch">
+            <button id="localeCsButton" class="locale-switch__button is-active" type="button">CS</button>
+            <button id="localeEnButton" class="locale-switch__button" type="button">EN</button>
+          </div>
+          <button id="downloadZipButton" class="button button--secondary button--compact is-hidden" type="button">
+            Stáhnout ZIP (0)
+          </button>
+          <button id="settingsButton" class="icon-button" type="button" aria-label="Otevřít nastavení">
+            <span aria-hidden="true">&#9881;</span>
+          </button>
+          <label class="theme-toggle" for="themeToggle">
+            <span>Světlý motiv</span>
+            <input id="themeToggle" type="checkbox" aria-label="Přepnout světlý motiv">
+          </label>
+        </div>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-card__row">
+          <span id="progressLabel">Postup</span>
+          <span id="sentenceCounter">1 / 5</span>
+        </div>
+        <div class="progress-bar" aria-hidden="true">
+          <div id="progressFill" class="progress-bar__fill"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-panel">
+      <section id="setupPanel" class="setup-panel">
+        <div class="setup-panel__intro">
+          <p id="setupEyebrow" class="eyebrow">Vyber sadu vět</p>
+          <h2 id="setupTitle" class="setup-title">Nejdřív zvol zdroj vět pro nahrávání</h2>
+          <p id="setupCopy" class="setup-copy">
+            Můžeš použít připravenou českou nebo HDS sadu, případně nahrát vlastní `.txt` soubor.
+            Jedna věta odpovídá jednomu řádku.
+          </p>
+        </div>
+
+        <div class="setup-grid">
+          <button id="loadDefaultCsButton" class="setup-card" type="button">
+            <span id="defaultCsEyebrow" class="setup-card__eyebrow">Výchozí sada</span>
+            <strong>default_cs.txt</strong>
+            <span id="defaultCsDescription">Sada 400 českých vět.</span>
+          </button>
+
+          <button id="loadDefaultEnButton" class="setup-card" type="button">
+            <span id="defaultEnEyebrow" class="setup-card__eyebrow">Výchozí sada</span>
+            <strong id="defaultEnTitle">default_hds.txt</strong>
+            <span id="defaultEnDescription">HDS věty.</span>
+          </button>
+
+          <label class="setup-card setup-card--upload" for="customSentenceFile">
+            <span id="customFileEyebrow" class="setup-card__eyebrow">Vlastní soubor</span>
+            <strong id="customFileTitle">Nahrát .txt</strong>
+            <span id="customFileDescription">Vyber vlastní textový soubor z počítače.</span>
+            <input id="customSentenceFile" type="file" accept=".txt,text/plain">
+          </label>
+        </div>
+
+        <section class="preview-panel" aria-labelledby="previewHeading">
+          <div class="preview-panel__header">
+            <p id="previewHeading" class="eyebrow">Náhled vět</p>
+            <span id="previewMeta" class="preview-meta">0 vět</span>
+          </div>
+          <div id="sentencePreviewList" class="preview-list">
+            <p class="preview-empty">Po načtení sady se tady objeví náhled vět.</p>
+          </div>
+        </section>
+
+        <div class="setup-footer">
+          <div class="setup-footer__meta">
+            <div class="setup-options">
+              <button id="reshuffleButton" class="button button--secondary button--compact" type="button" disabled>
+                Reshuffle
+              </button>
+            </div>
+            <p id="sentenceSetStatus" class="setup-status">Zatím není načtena žádná sada vět.</p>
+          </div>
+          <button id="beginSessionButton" class="button button--primary" type="button" disabled>Začít nahrávat</button>
+        </div>
+      </section>
+
+      <section class="sentence-panel" aria-labelledby="sentenceHeading">
+        <p id="currentSentenceLabel" class="eyebrow">Aktuální věta</p>
+        <h2 id="sentenceHeading" class="sentence-text"></h2>
+      </section>
+
+      <section class="waveform-panel" aria-labelledby="waveformHeading">
+        <div class="waveform-panel__header">
+          <p id="waveformHeading" class="eyebrow">Live waveform</p>
+          <span id="statusPill" class="status-pill">Idle</span>
+        </div>
+        <canvas id="waveformCanvas" width="1200" height="260" aria-label="Waveform preview"></canvas>
+        <p id="statusMessage" class="status-message">Klikni na START a aplikace začne poslouchat mikrofon.</p>
+      </section>
+    </main>
+
+    <footer class="control-panel">
+      <button id="startButton" class="button button--primary" type="button">START</button>
+      <button id="skipButton" class="button button--secondary" type="button">Přeskočit</button>
+      <button id="playButton" class="button button--secondary is-hidden" type="button">Přehrát</button>
+      <button id="saveButton" class="button button--primary is-hidden" type="button">Uložit</button>
+      <button id="retryButton" class="button button--secondary is-hidden" type="button">Nahrát znovu</button>
+    </footer>
+  </div>
+
+  <aside id="settingsPanel" class="settings-panel is-hidden" aria-labelledby="settingsHeading">
+    <div class="settings-panel__backdrop" id="settingsBackdrop"></div>
+    <div class="settings-panel__card">
+      <div class="settings-panel__header">
+        <div>
+          <p id="settingsEyebrow" class="eyebrow">Nastavení</p>
+          <h2 id="settingsHeading" class="settings-title">Detekce ticha</h2>
+        </div>
+        <button id="closeSettingsButton" class="icon-button" type="button" aria-label="Zavřít nastavení">
+          <span aria-hidden="true">&#10005;</span>
+        </button>
+      </div>
+
+      <div class="setting-field">
+        <div class="setting-field__label">
+          <label id="silenceDurationLabel" for="silenceDurationRange">Délka ticha pro auto-stop</label>
+          <strong id="silenceDurationValue">800 ms</strong>
+        </div>
+        <input id="silenceDurationRange" type="range" min="400" max="2000" step="50" value="800">
+      </div>
+
+      <div class="setting-field">
+        <div class="setting-field__label">
+          <label id="rmsThresholdLabel" for="rmsThresholdRange">RMS threshold hlasitosti</label>
+          <strong id="rmsThresholdValue">0.025</strong>
+        </div>
+        <input id="rmsThresholdRange" type="range" min="0.010" max="0.100" step="0.005" value="0.025">
+      </div>
+
+      <div class="setting-field">
+        <div class="setting-field__label">
+          <label id="fileNameTemplateLabel" for="fileNameTemplateInput">Šablona názvu souboru</label>
+        </div>
+        <input id="fileNameTemplateInput" type="text" value="Sentence{index5}.wav" spellcheck="false">
+        <p id="fileNameTemplateHint" class="settings-note">Použij placeholdery: {id}, {index}, {index5}, {index6}, {sentence}, {date}, {time}, {lang}.</p>
+      </div>
+
+      <div class="setting-field">
+        <div class="setting-field__label">
+          <label id="sampleRateLabel" for="sampleRateSelect">Vzorkovací frekvence exportu</label>
+        </div>
+        <select id="sampleRateSelect">
+          <option value="48000">48000 Hz</option>
+          <option value="24000">24000 Hz</option>
+        </select>
+      </div>
+
+      <p id="settingsNote" class="settings-note">Hodnoty se ukládají do prohlížeče a zůstanou zachované i po reloadu stránky.</p>
+    </div>
+  </aside>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
