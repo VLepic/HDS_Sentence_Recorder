@@ -170,8 +170,10 @@ const state = {
 };
 
 const sentenceHeading = document.getElementById("sentenceHeading");
-const sentenceCounter = document.getElementById("sentenceCounter");
+const sentenceIndexInput = document.getElementById("sentenceIndexInput");
+const sentenceCounterTotal = document.getElementById("sentenceCounterTotal");
 const progressFill = document.getElementById("progressFill");
+const progressSlider = document.getElementById("progressSlider");
 const themeToggle = document.getElementById("themeToggle");
 const statusPill = document.getElementById("statusPill");
 const statusMessage = document.getElementById("statusMessage");
@@ -345,11 +347,45 @@ function updateDownloadButton() {
   beginSessionButton.disabled = state.sentences.length === 0 || state.isZipGenerating;
   reshuffleButton.disabled = state.sentences.length === 0 || state.isZipGenerating;
   settingsButton.disabled = state.isZipGenerating;
+  syncProgressControls();
 }
 
 function updateTotalDuration() {
   const totalDuration = [...state.zipEntries.values()].reduce((sum, entry) => sum + entry.durationSeconds, 0);
   totalDurationLabel.textContent = `${totalDuration.toFixed(1)} s`;
+}
+
+function canChangeSentence() {
+  return state.sentences.length > 0 && !state.isZipGenerating && state.uiState !== "recording" && !state.currentRecording;
+}
+
+function syncProgressControls() {
+  const total = state.sentences.length;
+  const current = total === 0 ? 0 : state.currentSentenceIndex + 1;
+  const maxValue = Math.max(total, 1);
+
+  sentenceCounterTotal.textContent = String(total);
+  sentenceIndexInput.min = total === 0 ? "0" : "1";
+  sentenceIndexInput.max = String(maxValue);
+  sentenceIndexInput.value = String(current);
+  sentenceIndexInput.disabled = !canChangeSentence();
+
+  progressSlider.min = total === 0 ? "0" : "1";
+  progressSlider.max = String(maxValue);
+  progressSlider.value = String(current);
+  progressSlider.disabled = !canChangeSentence();
+}
+
+function goToSentence(index) {
+  if (!canChangeSentence()) {
+    syncProgressControls();
+    return;
+  }
+
+  const nextIndex = Math.min(Math.max(index, 0), state.sentences.length - 1);
+  state.currentSentenceIndex = nextIndex;
+  renderSentence();
+  drawWaveformPlaceholder();
 }
 
 function syncSettingsUI() {
@@ -497,14 +533,14 @@ function renderSentencePreview() {
 function renderSentence() {
   if (state.sentences.length === 0) {
     sentenceHeading.textContent = t("currentSentencePlaceholder");
-    sentenceCounter.textContent = "0 / 0";
     progressFill.style.width = "0%";
+    syncProgressControls();
     return;
   }
 
   sentenceHeading.textContent = state.sentences[state.currentSentenceIndex].text;
-  sentenceCounter.textContent = `${state.currentSentenceIndex + 1} / ${state.sentences.length}`;
   progressFill.style.width = `${((state.currentSentenceIndex + 1) / state.sentences.length) * 100}%`;
+  syncProgressControls();
 }
 
 function resizeCanvas() {
@@ -561,6 +597,8 @@ function setUIState(nextState) {
   } else if (nextState === "review") {
     statusMessage.textContent = t("statusReview");
   }
+
+  syncProgressControls();
 }
 
 function drawGrid(width, height) {
@@ -1114,6 +1152,30 @@ sampleRateSelect.addEventListener("change", (event) => {
     state.settings.sampleRate = nextRate;
     persistSettings();
   }
+});
+progressSlider.addEventListener("input", (event) => {
+  const nextIndex = Number.parseInt(event.target.value, 10) - 1;
+  if (Number.isFinite(nextIndex)) {
+    goToSentence(nextIndex);
+  }
+});
+sentenceIndexInput.addEventListener("change", (event) => {
+  const nextValue = Number.parseInt(event.target.value, 10);
+  if (!Number.isFinite(nextValue)) {
+    syncProgressControls();
+    return;
+  }
+
+  goToSentence(nextValue - 1);
+});
+sentenceIndexInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") {
+    return;
+  }
+
+  event.preventDefault();
+  sentenceIndexInput.blur();
+  sentenceIndexInput.dispatchEvent(new Event("change"));
 });
 
 loadDefaultCsButton.addEventListener("click", async () => {

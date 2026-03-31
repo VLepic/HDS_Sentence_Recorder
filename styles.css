@@ -266,13 +266,55 @@ input {
 .progress-card__row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: var(--main-font);
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--muted);
 }
 
+.sentence-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sentence-counter__input {
+  width: 72px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  text-align: right;
+  font-family: var(--main-font);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  appearance: textfield;
+}
+
+.sentence-counter__input::-webkit-outer-spin-button,
+.sentence-counter__input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.sentence-counter__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sentence-counter__divider,
+.sentence-counter__total {
+  color: var(--muted);
+}
+
 .progress-bar {
+  position: relative;
   height: 14px;
   border-radius: 999px;
   overflow: hidden;
@@ -287,10 +329,26 @@ input {
   transition: width 220ms ease;
 }
 
+.progress-bar__slider {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.progress-bar__slider:disabled {
+  cursor: not-allowed;
+}
+
 .main-panel {
   display: grid;
   grid-template-rows: minmax(180px, auto) 1fr;
   gap: 24px;
+}
+
+.setup-panel {
+  order: 0;
 }
 
 .setup-panel {
@@ -458,11 +516,13 @@ input {
 }
 
 .sentence-panel {
+  order: 2;
   background: var(--sentence-panel);
   padding: clamp(24px, 5vw, 48px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: flex-start;
   position: relative;
   overflow: hidden;
 }
@@ -480,7 +540,7 @@ input {
 
 .sentence-text {
   margin: 0;
-  max-width: 30ch;
+  max-width: min(52ch, 100%);
   font-family: var(--main-font);
   font-size: clamp(2rem, 5vw, 4.75rem);
   line-height: 1.05;
@@ -489,6 +549,7 @@ input {
 }
 
 .waveform-panel {
+  order: 1;
   padding: 24px;
   display: grid;
   gap: 18px;

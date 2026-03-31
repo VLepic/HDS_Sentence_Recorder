@@ -42,10 +42,15 @@
       <div class="progress-card">
         <div class="progress-card__row">
           <span id="progressLabel">Postup</span>
-          <span id="sentenceCounter">1 / 5</span>
+          <label class="sentence-counter" for="sentenceIndexInput">
+            <input id="sentenceIndexInput" class="sentence-counter__input" type="number" min="1" value="1" inputmode="numeric">
+            <span class="sentence-counter__divider">/</span>
+            <span id="sentenceCounterTotal" class="sentence-counter__total">5</span>
+          </label>
         </div>
-        <div class="progress-bar" aria-hidden="true">
+        <div class="progress-bar">
           <div id="progressFill" class="progress-bar__fill"></div>
+          <input id="progressSlider" class="progress-bar__slider" type="range" min="1" max="1" value="1" aria-label="Sentence progress">
         </div>
       </div>
     </header>
