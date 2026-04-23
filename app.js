@@ -61,7 +61,11 @@ const TRANSLATIONS = {
     failedFile: "Vlastní soubor se nepodařilo přečíst.",
     chooseSetFirst: "Před nahráváním nejdřív vyber sadu vět.",
     mediaUnsupported: "Tento prohlížeč nepodporuje MediaRecorder nebo přístup k mikrofonu.",
-    micFailed: "Nepodařilo se přistoupit k mikrofonu. Zkontroluj oprávnění v prohlížeči.",
+    micInsecureContext: "Mikrofon funguje jen v zabezpečeném kontextu. Otevři aplikaci přes HTTPS nebo localhost.",
+    micPermissionDenied: "Prohlížeč přístup k mikrofonu zablokoval. Zkontroluj oprávnění v adresním řádku a obnov stránku.",
+    micNotFound: "Nebyl nalezen žádný mikrofon. Zkontroluj připojené vstupní zařízení.",
+    micBusy: "Mikrofon je obsazený nebo ho systém nemůže otevřít. Zavři jiné aplikace, které ho používají, a zkus to znovu.",
+    micFailed: "Nepodařilo se přistoupit k mikrofonu. Ověř oprávnění, HTTPS a dostupnost zařízení.",
     playbackFailed: "Přehrání nahrávky se nepodařilo spustit.",
     preparingWav: "Připravuji WAV záznam do session ZIP archivu.",
     savingFailed: "Uložení nahrávky do ZIP session selhalo.",
@@ -123,7 +127,11 @@ const TRANSLATIONS = {
     failedFile: "The custom file could not be read.",
     chooseSetFirst: "Before recording, choose a sentence set first.",
     mediaUnsupported: "This browser does not support MediaRecorder or microphone access.",
-    micFailed: "Could not access the microphone. Check browser permissions.",
+    micInsecureContext: "The microphone only works in a secure context. Open the app over HTTPS or localhost.",
+    micPermissionDenied: "Browser access to the microphone was blocked. Check the permission in the address bar and reload the page.",
+    micNotFound: "No microphone was found. Check that an input device is connected.",
+    micBusy: "The microphone is busy or the system cannot open it. Close other apps using it and try again.",
+    micFailed: "Could not access the microphone. Check permissions, HTTPS, and device availability.",
     playbackFailed: "Playback could not be started.",
     preparingWav: "Preparing WAV recording for the ZIP session archive.",
     savingFailed: "Saving the recording to the ZIP session failed.",
@@ -443,6 +451,27 @@ function setSettingsOpen(isOpen) {
 
 function hasUnsavedWork() {
   return state.uiState === "recording" || Boolean(state.currentRecording);
+}
+
+function getMicrophoneErrorMessage(error) {
+  if (!window.isSecureContext) {
+    return t("micInsecureContext");
+  }
+
+  switch (error && error.name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return t("micPermissionDenied");
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return t("micNotFound");
+    case "NotReadableError":
+    case "TrackStartError":
+    case "AbortError":
+      return t("micBusy");
+    default:
+      return t("micFailed");
+  }
 }
 
 function applyTranslations() {
@@ -919,6 +948,11 @@ async function startRecording() {
     return;
   }
 
+  if (!window.isSecureContext) {
+    statusMessage.textContent = t("micInsecureContext");
+    return;
+  }
+
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
     statusMessage.textContent = t("mediaUnsupported");
     return;
@@ -958,7 +992,7 @@ async function startRecording() {
   } catch (error) {
     cleanupAudioGraph();
     setUIState("idle");
-    statusMessage.textContent = t("micFailed");
+    statusMessage.textContent = getMicrophoneErrorMessage(error);
     console.error("Microphone start failed:", error);
   }
 }
